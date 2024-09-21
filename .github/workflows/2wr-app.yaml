@@ -43,99 +43,15 @@ jobs:
           TWO_WEEKS_READY_E2E_TEST_PASSWORD: ${{ secrets.TWO_WEEKS_READY_E2E_TEST_PASSWORD }}
       working-directory: ./2wr-app
     - name: Upload e2e Test Results Recordings and Screenshots
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: e2e-test-results
         path: ./2wr-app/test-results
     - name: Upload e2e Test Results Report
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: e2e-test-report
         path: ./2wr-app/playwright-report
-    - name: Clear sample env file from e2e tests
-      run: 'rm ./2wr-app/.env'
-    - name: Write env file
-      run: 'echo "$DEV_ENV" > ./2wr-app/.env'
-      shell: bash
-      env:
-        DEV_ENV: ${{secrets.DEV_ENV}}
-    - run: npm run build
-      working-directory: ./2wr-app
 
-  deploy_to_dev:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [16.x]
-    
-    needs: build
-    if: github.event_name != 'pull_request'
-    environment: development
-    steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm ci
-      working-directory: ./2wr-app
-    - name: Write env file
-      run: 'echo "$DEV_ENV" > ./2wr-app/.env'
-      shell: bash
-      env:
-        DEV_ENV: ${{secrets.DEV_ENV}}
-    - run: npm run build
-      working-directory: ./2wr-app
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    - name: Azure Deploy Resources
-      uses: Azure/cli@v1.0.0
-      with:
-        inlineScript: |
-          chmod +x $GITHUB_WORKSPACE/az/deploy-frontend.sh
-          $GITHUB_WORKSPACE/az/deploy-frontend.sh -s $GITHUB_WORKSPACE/2wr-app/dist/
-          
-  deploy_to_beta:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [16.x]
-
-    needs: deploy_to_dev
-    if: github.event_name != 'pull_request'
-    environment: beta
-    steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm ci
-      working-directory: ./2wr-app
-    - name: Write env file
-      run: 'echo "$ENV" > ./2wr-app/.env'
-      shell: bash
-      env:
-        ENV: ${{secrets.ENV}}
-    - run: npm run build
-      working-directory: ./2wr-app
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    - name: Azure Deploy Resources
-      uses: Azure/cli@v1.0.0
-      with:
-        inlineScript: |
-          chmod +x $GITHUB_WORKSPACE/az/deploy-frontend.sh
-          $GITHUB_WORKSPACE/az/deploy-frontend.sh -s $GITHUB_WORKSPACE/2wr-app/dist/ -r 2wr-beta-resources -e 2wrbeta      
