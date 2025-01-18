@@ -1,3 +1,5 @@
+
+
 {
   "name": "2wr-app",
   "version": "0.1.0",
@@ -31,7 +33,7 @@
   },
   "devDependencies": {
     "@mdi/font": "^5.8.55",
-    "@playwright/test": "^1.47.2",
+    "@playwright/test": "^1.49.1",
     "@vue/cli-plugin-babel": "^4.5.10",
     "@vue/cli-plugin-eslint": "^4.5.10",
     "@vue/cli-plugin-pwa": "^4.5.10",
